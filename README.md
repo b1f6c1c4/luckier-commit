@@ -19,6 +19,10 @@ $ git log
 
 As a demonstration, see the latest commits in this repository.
 
+## What about merge, rebase, cherry-pick, revert, etc?
+
+Use `git luckier-merge`, `git luckier-rebase`, `git-luckier-pick`, `git luckier-revert`.
+
 ## How?
 
 `luckier-commit` amends your commit messages by adding a few characters of various types of whitespace, and keeps trying new messages until it finds a good hash. By default, it will keep searching until it finds a hash starting with one plus the hash of its first-parent, but this can be changed by simply passing the desired hash as an argument.

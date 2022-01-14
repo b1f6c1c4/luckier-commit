@@ -1,0 +1,3 @@
+#!/bin/sh
+
+"$GIT_EXEC_PATH/git" rebase "$@" --exec luckier_commit

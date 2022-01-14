@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Note: fast-forward may not be lucky enough, so --no-ff is enforced.
+"$GIT_EXEC_PATH/git" merge "$@" --no-ff && luckier_commit
