@@ -10,7 +10,8 @@ use std::process::{Command, Stdio};
 
 fn main() -> std::io::Result<()> {
     let args = env::args().collect::<Vec<String>>();
-    let width = args.get(1)
+    let width = args
+        .get(1)
         .map(String::as_str)
         .map(|s| s.parse::<usize>().unwrap())
         .unwrap_or(7);
@@ -49,8 +50,14 @@ fn main() -> std::io::Result<()> {
             }
             "\n" => {
                 let (ty, info) = match state {
-                    State::Committing => ("commit", format!("tree {}{}{}{}\n", tree, parents, author, committer)),
-                    State::Tagging => ("tag", format!("{}type commit\n{}{}\n", parents, author, committer)),
+                    State::Committing => (
+                        "commit",
+                        format!("tree {}{}{}{}\n", tree, parents, author, committer),
+                    ),
+                    State::Tagging => (
+                        "tag",
+                        format!("{}type commit\n{}{}\n", parents, author, committer),
+                    ),
                     State::Frommed => {
                         state = State::RefSelected;
                         continue 'a;
@@ -64,7 +71,10 @@ fn main() -> std::io::Result<()> {
                     .transpose()
                     .unwrap()
                     .unwrap();
-                println!("progress Luckilizing {} {} of height {} ... ", ty, original, lucky);
+                println!(
+                    "progress Luckilizing {} {} of height {} ... ",
+                    ty, original, lucky
+                );
                 let found_commit =
                     HashSearchWorker::new(existing_commit.as_slice(), desired_prefix, ty)
                         .search()

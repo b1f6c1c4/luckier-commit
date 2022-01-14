@@ -126,6 +126,7 @@ fn search_failure() {
             )
             .as_bytes(),
             "0102034".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -144,6 +145,7 @@ fn search_success_without_gpg_signature() {
             )
             .as_bytes(),
             "8f1e428".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -154,7 +156,7 @@ fn search_success_without_gpg_signature() {
                 dynamic_padding = "  \t                                             "
             )
             .into_bytes(),
-            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267]
+            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267],
         })
     );
 }
@@ -170,6 +172,7 @@ fn search_success_sha256_without_gpg_signature() {
             )
             .as_bytes(),
             "8d84635".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -183,7 +186,7 @@ fn search_success_sha256_without_gpg_signature() {
             hash: [
                 0x8d84635e, 0x3c969997, 0x8993a0b2, 0x7b144cd1, 0x97abdfdc, 0x88223259, 0x116651b4,
                 0x0076f9f6
-            ]
+            ],
         })
     );
 }
@@ -199,6 +202,7 @@ fn search_success_after_many_iterations() {
             )
             .as_bytes(),
             "000000".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(1 << 24)
         .search(),
@@ -210,7 +214,7 @@ fn search_success_after_many_iterations() {
                     "\t\t\t\t\t\t \t \t\t\t    \t \t \t\t\t\t                        "
             )
             .into_bytes(),
-            hash: [0x000000a2, 0x56d137b6, 0xcf22aa10, 0xf59b0c5f, 0xecb860b6]
+            hash: [0x000000a2, 0x56d137b6, 0xcf22aa10, 0xf59b0c5f, 0xecb860b6],
         })
     );
 }
@@ -219,13 +223,15 @@ fn search_success_after_many_iterations() {
 fn search_success_with_large_padding_specifier() {
     assert_eq!(
         HashSearchWorker::<Sha1> {
+            ty: "commit".to_string(),
             processed_commit: ProcessedCommit::new(
                 format!(
                     test_commit_without_signature!(),
                     static_padding = "",
                     dynamic_padding = ""
                 )
-                .as_bytes()
+                .as_bytes(),
+                "commit",
             ),
             desired_prefix: "00".parse().unwrap(),
             search_space: (1 << 40)..((1 << 40) + 256)
@@ -238,7 +244,7 @@ fn search_success_with_large_padding_specifier() {
                 dynamic_padding = "\t  \t \t                                         \t"
             )
             .into_bytes(),
-            hash: [0x008429bb, 0x16236716, 0x20cd203e, 0x57d62217, 0x4ba2b8c3]
+            hash: [0x008429bb, 0x16236716, 0x20cd203e, 0x57d62217, 0x4ba2b8c3],
         })
     );
 }
@@ -257,6 +263,7 @@ fn search_success_with_full_prefix_and_no_capped_space() {
             )
             .as_bytes(),
             "8f1e428ec25b1ea88389165eeb3fbdffbf7c3267".parse().unwrap(),
+            "commit",
         )
         .search(),
         Some(GitCommit {
@@ -266,7 +273,7 @@ fn search_success_with_full_prefix_and_no_capped_space() {
                 dynamic_padding = "  \t                                             "
             )
             .into_bytes(),
-            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267]
+            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267],
         })
     );
 }
@@ -289,6 +296,7 @@ fn search_success_without_gpg_signature_gpu_cpu_parity() {
             )
             .as_bytes(),
             "8f1e428".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_cpus(),
@@ -300,6 +308,7 @@ fn search_success_without_gpg_signature_gpu_cpu_parity() {
             )
             .as_bytes(),
             "8f1e428".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_gpu()
@@ -325,6 +334,7 @@ fn search_success_without_gpg_signature_gpu_cpu_parity_sha256() {
             )
             .as_bytes(),
             "8d84635".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_cpus(),
@@ -336,6 +346,7 @@ fn search_success_without_gpg_signature_gpu_cpu_parity_sha256() {
             )
             .as_bytes(),
             "8d84635".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_gpu()
@@ -354,6 +365,7 @@ fn search_success_with_multi_word_prefix() {
             )
             .as_bytes(),
             "8f1e428ec".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -364,7 +376,7 @@ fn search_success_with_multi_word_prefix() {
                 dynamic_padding = "  \t                                             "
             )
             .into_bytes(),
-            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267]
+            hash: [0x8f1e428e, 0xc25b1ea8, 0x8389165e, 0xeb3fbdff, 0xbf7c3267],
         })
     );
 }
@@ -380,6 +392,7 @@ fn search_success_with_multi_word_prefix_sha256() {
             )
             .as_bytes(),
             "8d84635e3c969".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -416,6 +429,7 @@ fn search_success_with_multi_word_prefix_gpu_cpu_parity() {
             )
             .as_bytes(),
             "8f1e428ec".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_cpus(),
@@ -427,6 +441,7 @@ fn search_success_with_multi_word_prefix_gpu_cpu_parity() {
             )
             .as_bytes(),
             "8f1e428ec".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_gpu()
@@ -452,6 +467,7 @@ fn search_success_with_multi_word_prefix_gpu_cpu_parity_sha256() {
             )
             .as_bytes(),
             "8d84635e3c969".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_cpus(),
@@ -463,6 +479,7 @@ fn search_success_with_multi_word_prefix_gpu_cpu_parity_sha256() {
             )
             .as_bytes(),
             "8d84635e3c969".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search_with_gpu()
@@ -481,6 +498,7 @@ fn search_success_with_gpg_signature() {
             )
             .as_bytes(),
             "49ae8".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(100)
         .search(),
@@ -506,46 +524,54 @@ fn split_search_space_uneven() {
                     static_padding = "",
                     dynamic_padding = ""
                 )
-                .as_bytes()
+                .as_bytes(),
+                "commit",
             ),
             desired_prefix: Default::default(),
+            ty: "commit".to_string(),
             search_space: 0..100,
         }
         .split_search_space(3)
         .collect::<Vec<_>>(),
         vec![
             HashSearchWorker {
+                ty: "commit".to_string(),
                 processed_commit: ProcessedCommit::new(
                     format!(
                         test_commit_with_signature!(),
                         static_padding = "",
                         dynamic_padding = ""
                     )
-                    .as_bytes()
+                    .as_bytes(),
+                    "commit",
                 ),
                 desired_prefix: Default::default(),
                 search_space: 0..33,
             },
             HashSearchWorker {
+                ty: "commit".to_string(),
                 processed_commit: ProcessedCommit::new(
                     format!(
                         test_commit_with_signature!(),
                         static_padding = "",
                         dynamic_padding = ""
                     )
-                    .as_bytes()
+                    .as_bytes(),
+                    "commit",
                 ),
                 desired_prefix: Default::default(),
                 search_space: 33..66,
             },
             HashSearchWorker {
+                ty: "commit".to_string(),
                 processed_commit: ProcessedCommit::new(
                     format!(
                         test_commit_with_signature!(),
                         static_padding = "",
                         dynamic_padding = ""
                     )
-                    .as_bytes()
+                    .as_bytes(),
+                    "commit",
                 ),
                 desired_prefix: Default::default(),
                 search_space: 66..100,
@@ -564,6 +590,7 @@ fn processed_commit_without_gpg_signature() {
                 dynamic_padding = ""
             )
             .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -584,7 +611,8 @@ fn processed_commit_with_gpg_signature() {
                 static_padding = "",
                 dynamic_padding = ""
             )
-            .as_bytes()
+            .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -605,7 +633,8 @@ fn processed_commit_already_padded() {
                 static_padding = repeat(" ").take(4).collect::<String>(),
                 dynamic_padding = repeat("\t").take(100).collect::<String>()
             )
-            .as_bytes()
+            .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -626,7 +655,8 @@ fn process_merge_commit_with_signature() {
                 static_padding = "",
                 dynamic_padding = ""
             )
-            .as_bytes()
+            .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -647,7 +677,8 @@ fn processed_commit_with_gpg_stuff_in_message() {
                 static_padding = "",
                 dynamic_padding = ""
             )
-            .as_bytes()
+            .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -668,7 +699,8 @@ fn processed_commit_with_gpg_stuff_in_email() {
                 static_padding = "",
                 dynamic_padding = ""
             )
-            .as_bytes()
+            .as_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -689,7 +721,8 @@ fn processed_commit_pathological_padding_alignment() {
                 static_padding = "",
                 dynamic_padding = ""
             )
-            .into_bytes()
+            .into_bytes(),
+            "commit",
         )
         .commit(),
         format!(
@@ -703,37 +736,58 @@ fn processed_commit_pathological_padding_alignment() {
 
 #[test]
 fn compute_static_padding_length_simple() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(226, 300), 19)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(226, 300, "commit"),
+        19
+    )
 }
 
 #[test]
 fn compute_static_padding_length_zero() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(245, 300), 0)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(245, 300, "commit"),
+        0
+    )
 }
 
 #[test]
 fn compute_static_padding_length_max() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(246, 300), 63)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(246, 300, "commit"),
+        63
+    )
 }
 
 #[test]
 fn compute_static_padding_length_increasing_digit_count() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(920, 980), 28)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(920, 980, "commit"),
+        28
+    )
 }
 
 #[test]
 fn compute_static_padding_length_increasing_digit_count_to_power_of_ten_minus_one() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(941, 991), 8)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(941, 991, "commit"),
+        8
+    )
 }
 
 #[test]
 fn compute_static_padding_length_increasing_digit_count_to_power_of_ten() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(940, 992), 8)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(940, 992, "commit"),
+        8
+    )
 }
 
 #[test]
 fn compute_static_padding_length_solution_overlaps_digit_count_boundary() {
-    assert_eq!(ProcessedCommit::compute_static_padding_length(940, 991), 72)
+    assert_eq!(
+        ProcessedCommit::compute_static_padding_length(940, 991, "commit"),
+        72
+    )
 }
 
 #[test]
