@@ -1,8 +1,8 @@
-use lucky_commit::{HashSearchWorker, Sha1};
+use luckier_commit::{HashSearchWorker, Sha1};
 
 pub fn run_benchmark() {
     // Runs a benchmark for performance testing. This does a constant hash search. This benchmark
-    // should take roughly the same amount of time as running `lucky_commit` with no arguments, but
+    // should take roughly the same amount of time as running `luckier_commit` with no arguments, but
     // the performance should be much more consistent.
     // Caveats:
     // * The benchmark doesn't spawn any git commands or interact with the filesystem, whereas
@@ -12,7 +12,7 @@ pub fn run_benchmark() {
     //   and during that time threads that have already finished will be idle. In a more realistic
     //   scenario, each thread would almost always still be doing work at any given time.
     //
-    // To use: run `time target/release/lucky_commit --benchmark`.
+    // To use: run `time target/release/luckier_commit --benchmark`.
     assert_eq!(
         HashSearchWorker::<Sha1>::new(
             b"\

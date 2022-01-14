@@ -1,6 +1,6 @@
 mod benchmark;
 
-use lucky_commit::{
+use luckier_commit::{
     GitCommit, GitHashFn, HashPrefix, HashSearchWorker, ParseHashPrefixErr, Sha1, Sha256,
 };
 use std::{
@@ -16,23 +16,22 @@ fn main() -> Result<(), ParseHashPrefixErr> {
             benchmark::run_benchmark();
             exit(0)
         }
-        [_, arg] if arg == "--auto" => {
+        [_, prefix] => Some(prefix.to_owned()),
+        [_] => {
             spawn_git_silent(&["rev-parse", "-q", "--short", "HEAD^"], None)
                 .and_then(get_next_prefix)
         }
-        [_, prefix] => Some(prefix.to_owned()),
-        [_] => None,
         _ => {
-            eprintln!("Usage: lucky_commit [--auto | commit-hash-prefix]");
+            eprintln!("Usage: luckier_commit [--auto | commit-hash-prefix]");
             exit(1)
         }
     };
 
     let existing_commit = spawn_git(&["cat-file", "commit", "HEAD"], None);
     if looks_like_sha256_repository(&existing_commit) {
-        run_lucky_commit::<Sha256>(&existing_commit, &prefix_spec)
+        run_luckier_commit::<Sha256>(&existing_commit, &prefix_spec)
     } else {
-        run_lucky_commit::<Sha1>(&existing_commit, &prefix_spec)
+        run_luckier_commit::<Sha1>(&existing_commit, &prefix_spec)
     }
 }
 
@@ -61,7 +60,7 @@ fn get_next_prefix(mut existing_prefix: Vec<u8>) -> Option<String> {
     )
 }
 
-fn run_lucky_commit<H: GitHashFn>(
+fn run_luckier_commit<H: GitHashFn>(
     existing_commit: &[u8],
     prefix_spec: &Option<String>,
 ) -> Result<(), ParseHashPrefixErr> {
@@ -91,7 +90,7 @@ fn run_lucky_commit<H: GitHashFn>(
             &[
                 "update-ref",
                 "-m",
-                "amend with lucky_commit",
+                "amend with luckier_commit",
                 "HEAD",
                 &new_hash,
                 &GitCommit::<H>::new(existing_commit).hex_hash(),

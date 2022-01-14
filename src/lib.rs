@@ -1,4 +1,4 @@
-//! The underlying API of lucky_commit is also exposed as a Rust library, in case anyone
+//! The underlying API of luckier_commit is also exposed as a Rust library, in case anyone
 //! wants to use it programmatically. However, note that the library API is considered
 //! unstable, and might have backwards-incompatible changes even in minor or patch
 //! releases of the crate. If you use the library interface, pinning to an exact version
@@ -95,7 +95,7 @@ struct ProcessedCommit {
 /// * Next, each each 64-byte block in the input is processed in sequence. The state vector after
 /// processing a block is a convoluted, deteriministic function of (a) the state vector before
 /// processing the block, and (b) the contents of the block. Processing blocks is the main performance
-/// bottleneck of lucky-commit.
+/// bottleneck of luckier-commit.
 /// * The "hash" of some data is just the contents of the state vector after processing all of
 /// the data (with finalization padding added to the end of the data, as described in the comment
 /// about the `ProcessedCommit` format).
@@ -504,8 +504,8 @@ impl ProcessedCommit {
         let padding_insertion_point = Self::get_padding_insertion_point(original_commit);
 
         // If the commit message already has spaces or tabs where we're putting padding, the most
-        // likely explanation is that the user has run lucky-commit on this commit before. To prevent
-        // commits from repeatedly growing after lucky-commit is run on them, omit the old padding
+        // likely explanation is that the user has run luckier-commit on this commit before. To prevent
+        // commits from repeatedly growing after luckier-commit is run on them, omit the old padding
         // rather than piling onto it.
         let replaceable_padding_size = original_commit[padding_insertion_point..]
             .iter()
