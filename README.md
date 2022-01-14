@@ -4,14 +4,17 @@ Make your git commits luckier every time, counting from `0000000`, `0000001`, `0
 
 ## What?
 
-With this simple tool, you can change the start of your git commit hashes to whatever you want, by default to be `HEAD^ + 1`.
+With this simple tool, you can change the start of your git commit hashes to whatever you want, by default to be `HEAD^ + 0x1`.
 
 ```bash
+$ git init
+$ git luckier-commit --allow-empty -m 'Init commit'
+$ git luckier-commit --allow-empty -m 'Another commit'
+$ git luckier-commit --allow-empty -m 'One more commit'
 $ git log
-1f6383a Some commit
-$ luckier_commit
-$ git log
-0000000 Some commit
+0000000 Init commit
+0000001 Another commit
+0000002 One more commit
 ```
 
 As a demonstration, see the latest commits in this repository.
@@ -32,12 +35,7 @@ $ git log
 
 ## Installation
 
-* Make sure you have `rustc` and `cargo` installed. Installation instructions can be found [here](https://doc.rust-lang.org/book/ch01-01-installation.html).
-* Run `cargo install luckier_commit --locked`
-
-Depending on your `cargo` setup, this will usually add the binary to your `$PATH`. You can then use it by running `luckier_commit`.
-
-Alternatively, you can build from source:
+You can build from source:
 
 ```
 $ git clone https://github.com/b1f6c1c4/luckier-commit
@@ -64,15 +62,13 @@ However, if you encounter a linker error along the lines of `/usr/bin/ld: cannot
 
 ### Hash rate
 
-The main bottleneck is SHA1 throughput. The default hash prefix of `0000000` has length 7, so on average, `luckier-commit` needs to compute 16<sup>7</sup> SHA1 hashes.
+The main bottleneck is SHA1 throughput. The default hash prefix of (usually) has length 7, so on average, `luckier-commit` needs to compute 16<sup>7</sup> SHA1 hashes.
 
 For non-GPG-signed commits, `luckier-commit` adds its whitespace to a 64-byte-aligned block at the very end of the commit message. Since everything that precedes the whitespace is constant for any particular commit, this allows `luckier-commit` to cache the SHA1 buffer state and only hash a single 64-byte block on each attempt.
 
 Hash searching is extremely parallelizable, and `luckier-commit` takes advantage of this by running on a GPU when available. (The intuitive idea is that if you pretend that your commits are actually graphical image data, where SHA1 is a "shading" that gets applied to the whole image at once, and the resulting commit shorthashes are, say, RGBA pixel color values, then you can hash a large number of commits at once by just "rendering the image".)
 
-The GPU on my 2015 MacBook Pro can compute about 196 million single-block hashes per second. As a result, the theoretical average time to find a `0000000` commit hash on my laptop is (16<sup>7</sup> hashes) / (196000000 hashes/s) = **1.37 seconds**. You can estimate the average time for your computer by running `time luckier_commit --benchmark`.
-
-Outside of hashing, the tool also has to do a constant amount of I/O (e.g. spawning `git` a few times), resulting in an observed average time on my laptop of about 1.6 seconds.
+It takes me **0.62 seconds** on average to find a 7-digit commit hash on my desktop (16-core AMD Ryzen 9 5950X). You can estimate the average time for your computer by running `time luckier_commit --benchmark`.
 
 ### GPG signatures
 
