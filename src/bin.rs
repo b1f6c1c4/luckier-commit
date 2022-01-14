@@ -17,10 +17,8 @@ fn main() -> Result<(), ParseHashPrefixErr> {
             exit(0)
         }
         [_, prefix] => Some(prefix.to_owned()),
-        [_] => {
-            spawn_git_silent(&["rev-parse", "-q", "--short", "HEAD^"], None)
-                .and_then(get_next_prefix)
-        }
+        [_] => spawn_git_silent(&["rev-parse", "-q", "--short", "HEAD^"], None)
+            .and_then(get_next_prefix),
         _ => {
             eprintln!("Usage: luckier_commit [--auto | commit-hash-prefix]");
             exit(1)

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+"$GIT_EXEC_PATH/git" fast-export \
+    --show-original-ids \
+    --reference-excluded-parents \
+    --fake-missing-tagger \
+    --signed-tags=strip \
+    --tag-of-filtered-object=rewrite \
+    --use-done-feature \
+    --no-data \
+    --reencode=yes \
+    --mark-tags \
+    --all \
+    | luckier_commit_fliter \
+    | "$GIT_EXEC_PATH/git" -c core.ignorecase=false \
+    fast-import \
+    --date-format=raw-permissive \
+    --force \
+    --quiet

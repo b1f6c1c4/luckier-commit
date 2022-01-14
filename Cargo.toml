@@ -21,6 +21,10 @@ opencl = ["ocl"]
 name = "luckier_commit"
 path = "src/bin.rs"
 
+[[bin]]
+name = "luckier_commit_filter"
+path = "src/bin-filter.rs"
+
 [dependencies]
 num_cpus = "1.0"
 ocl = { version = "0.19", optional = true }
