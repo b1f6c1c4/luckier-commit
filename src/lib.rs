@@ -35,6 +35,7 @@ use std::convert::TryInto;
 /// to a specific commit that matches a specific hash prefix.
 #[derive(Debug, PartialEq)]
 pub struct HashSearchWorker<H: GitHashFn> {
+    ty: String,
     processed_commit: ProcessedCommit,
     desired_prefix: HashPrefix<H>,
     search_space: Range<u64>,
@@ -42,7 +43,7 @@ pub struct HashSearchWorker<H: GitHashFn> {
 
 // The fully padded data that gets hashed is the concatenation of all the following:
 // |--- GIT COMMIT HEADER (part of git's raw commit format) ---
-// | * The ASCII string "commit "
+// | * The ASCII string "commit " or "tag "
 // | * The byte-length of the entire "git commit" section below, represented as base-10 ASCII digits
 // | * A null byte (0x0)
 // |--- GIT COMMIT ---
@@ -237,9 +238,10 @@ impl<H: GitHashFn> HashSearchWorker<H> {
     /// Creates a worker for a specific commit and prefix, with an initial
     /// workload of 1 ** 48 units. As a rough approximation depending on hardware,
     /// each worker can perform about 7 million units of work per second.
-    pub fn new(current_commit: &[u8], desired_prefix: HashPrefix<H>) -> Self {
+    pub fn new(current_commit: &[u8], desired_prefix: HashPrefix<H>, ty: &str) -> Self {
         Self {
-            processed_commit: ProcessedCommit::new(current_commit),
+            ty: ty.to_string(),
+            processed_commit: ProcessedCommit::new(current_commit, ty),
             desired_prefix,
             search_space: 0..(1 << 48),
         }
@@ -270,6 +272,7 @@ impl<H: GitHashFn> HashSearchWorker<H> {
                 self.search_space.end
             };
             Self {
+                ty: self.ty.to_owned(),
                 processed_commit: self.processed_commit.clone(),
                 desired_prefix: self.desired_prefix.clone(),
                 search_space: range_start..range_end,
@@ -344,6 +347,7 @@ impl<H: GitHashFn> HashSearchWorker<H> {
         lame_duck_cancel_signal: Arc<AtomicBool>,
     ) -> Option<GitCommit<H>> {
         let HashSearchWorker {
+            ty,
             search_space,
             desired_prefix,
             mut processed_commit,
@@ -356,7 +360,7 @@ impl<H: GitHashFn> HashSearchWorker<H> {
             for index_in_interval in 0..lame_duck_check_interval {
                 partially_hashed_commit.scatter_padding(base_padding_specifier + index_in_interval);
                 if desired_prefix.matches(&partially_hashed_commit.current_hash()) {
-                    return Some(GitCommit::new(processed_commit.commit()));
+                    return Some(GitCommit::new(processed_commit.commit(), ty.as_str()));
                 }
             }
 
@@ -371,6 +375,7 @@ impl<H: GitHashFn> HashSearchWorker<H> {
     #[cfg(feature = "opencl")]
     fn search_with_gpu(self) -> ocl::Result<Option<GitCommit<H>>> {
         let HashSearchWorker {
+            ty,
             search_space,
             desired_prefix,
             mut processed_commit,
@@ -487,7 +492,7 @@ impl<H: GitHashFn> HashSearchWorker<H> {
                     successful_padding_specifier,
                 );
 
-                return Ok(Some(GitCommit::new(processed_commit.commit())));
+                return Ok(Some(GitCommit::new(processed_commit.commit(), ty.as_str())));
             }
         }
 
@@ -500,7 +505,7 @@ impl ProcessedCommit {
 
     /// See the comment above the definition of `ProcessedCommit` for details on how
     /// the data layout.
-    fn new(original_commit: &[u8]) -> Self {
+    fn new(original_commit: &[u8], ty: &str) -> Self {
         let padding_insertion_point = Self::get_padding_insertion_point(original_commit);
 
         // If the commit message already has spaces or tabs where we're putting padding, the most
@@ -516,6 +521,7 @@ impl ProcessedCommit {
         let static_padding_length = Self::compute_static_padding_length(
             padding_insertion_point,
             original_commit.len() - replaceable_padding_size + Self::DYNAMIC_PADDING_LENGTH,
+            ty,
         );
 
         let commit_length = original_commit.len() - replaceable_padding_size
@@ -523,7 +529,7 @@ impl ProcessedCommit {
             + Self::DYNAMIC_PADDING_LENGTH;
 
         // Git commit header
-        let mut data = format!("commit {}\0", commit_length).into_bytes();
+        let mut data = format!("{} {}\0", ty, commit_length).into_bytes();
 
         let commit_range = data.len()..(data.len() + commit_length);
 
@@ -606,10 +612,12 @@ impl ProcessedCommit {
     fn compute_static_padding_length(
         commit_length_before_static_padding: usize,
         commit_length_excluding_static_padding: usize,
+        ty: &str,
     ) -> usize {
         let compute_alignment = |padding_len: usize| {
             (format!(
-                "commit {}\0",
+                "{} {}\0",
+                ty,
                 commit_length_excluding_static_padding + padding_len
             )
             .len()
@@ -617,7 +625,7 @@ impl ProcessedCommit {
                 + padding_len)
                 % 64
         };
-        let prefix_length_estimate = format!("commit {}\0", commit_length_excluding_static_padding)
+        let prefix_length_estimate = format!("{} {}\0", ty, commit_length_excluding_static_padding)
             .len()
             + commit_length_before_static_padding;
         let initial_padding_length_guess = (64 - prefix_length_estimate % 64) % 64;
@@ -762,12 +770,12 @@ impl Debug for ParseHashPrefixErr {
 impl<H: GitHashFn> GitCommit<H> {
     /// Constructs a GitCommit from the given commit data. The data is assumed to be in
     /// git's object format, but this is not technically required.
-    pub fn new(commit: &[u8]) -> Self {
+    pub fn new(commit: &[u8], ty: &str) -> Self {
         Self {
             object: commit.to_vec(),
             hash: {
                 let mut state = H::INITIAL_STATE;
-                let commit_header = format!("commit {}\0", commit.len()).into_bytes();
+                let commit_header = format!("{} {}\0", ty, commit.len()).into_bytes();
                 let commit_data_length = commit_header.len() + commit.len();
 
                 H::compress(

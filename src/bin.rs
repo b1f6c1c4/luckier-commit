@@ -69,7 +69,7 @@ fn run_luckier_commit<H: GitHashFn>(
         .transpose()?
         .unwrap_or_default();
 
-    if let Some(found_commit) = HashSearchWorker::new(existing_commit, desired_prefix).search() {
+    if let Some(found_commit) = HashSearchWorker::new(existing_commit, desired_prefix, "commit").search() {
         let new_hash = found_commit.hex_hash();
         let new_git_oid = spawn_git(
             &["hash-object", "-t", "commit", "-w", "--stdin"],
@@ -91,7 +91,7 @@ fn run_luckier_commit<H: GitHashFn>(
                 "amend with luckier_commit",
                 "HEAD",
                 &new_hash,
-                &GitCommit::<H>::new(existing_commit).hex_hash(),
+                &GitCommit::<H>::new(existing_commit, "commit").hex_hash(),
             ],
             None,
         );

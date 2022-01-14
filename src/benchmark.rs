@@ -22,6 +22,7 @@ pub fn run_benchmark() {
                 \n\
                 Test commit for benchmarking performance changes\n",
             "000000000000000000000000000000000000000".parse().unwrap(),
+            "commit",
         )
         .with_capped_search_space(1 << 28)
         .search(),

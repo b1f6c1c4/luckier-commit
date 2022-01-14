@@ -59,7 +59,7 @@ fn main() -> std::io::Result<()> {
                     .unwrap();
                 println!("progress Luckilizing {} {} of height {} ... ", ty, original, lucky);
                 let found_commit =
-                    HashSearchWorker::new(existing_commit.as_slice(), desired_prefix)
+                    HashSearchWorker::new(existing_commit.as_slice(), desired_prefix, ty)
                         .search()
                         .unwrap();
                 let new_hash = found_commit.hex_hash();
