@@ -11,7 +11,7 @@
     --reencode=yes \
     --mark-tags \
     --all \
-    | luckier_commit_fliter \
+    | luckier_commit_filter "$@" \
     | "$GIT_EXEC_PATH/git" -c core.ignorecase=false \
     fast-import \
     --date-format=raw-permissive \

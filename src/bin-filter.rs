@@ -2,11 +2,19 @@ use luckier_commit::{HashPrefix, HashSearchWorker, Sha1};
 
 use std::collections::VecDeque;
 
+use std::env;
+
 use std::io::{prelude::*, stdin, BufReader};
 
 use std::process::{Command, Stdio};
 
 fn main() -> std::io::Result<()> {
+    let args = env::args().collect::<Vec<String>>();
+    let width = args.get(1)
+        .map(String::as_str)
+        .map(|s| s.parse::<usize>().unwrap())
+        .unwrap_or(7);
+
     let stdin = stdin();
     let mut reader = BufReader::new(stdin);
 
@@ -50,9 +58,8 @@ fn main() -> std::io::Result<()> {
                     _ => panic!("Illegal empty line in {:?} state", state),
                 };
                 let existing_commit = [info.as_bytes(), message.as_slice()].concat();
-                let prefix_spec = format!("{:07x}", lucky);
-                let desired_prefix = Some(&prefix_spec)
-                    .map(String::as_str)
+                let prefix_spec = format!("{:0width$x}", lucky, width = width);
+                let desired_prefix = Some(&prefix_spec[prefix_spec.len() - width..])
                     .map(str::parse::<HashPrefix<Sha1>>)
                     .transpose()
                     .unwrap()
@@ -142,9 +149,10 @@ fn main() -> std::io::Result<()> {
                     }
                     _ => panic!("Illegal command merge in {:?} state", state),
                 },
-                Some(("commit", _)) => match state {
+                Some(("commit", refs)) => match state {
                     State::RefSelected => {
                         state = State::Committing;
+                        refspec = refs.to_string();
                         tree.clear();
                         lucky = 0;
                         original.clear();
@@ -156,9 +164,10 @@ fn main() -> std::io::Result<()> {
                     }
                     _ => panic!("Illegal command commit in {:?} state", state),
                 },
-                Some(("tag", _)) => match state {
+                Some(("tag", refs)) => match state {
                     State::RefSelected => {
                         state = State::Tagging;
+                        refspec = "refs/tags/".to_string() + refs;
                         original.clear();
                         parents.clear();
                         author = line;
